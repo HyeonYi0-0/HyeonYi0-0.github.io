@@ -1,0 +1,24 @@
+name: Jekyll site CI          # action workflow 이름
+
+on:                           # workflow가 일어나는 event 정의
+  push:                       # github repository에 push를 했을 때
+    branches: [ "main" ]      # Push 위치: main
+  pull_request:               # pull request를 했을 때
+    branches: [ "main" ]      # pull request 위치: main
+
+jobs:                         # workflow가 일어날 때 실행될 부분 정의
+  build:                      # 실행될 부분의 이름: build
+
+    runs-on: ubuntu-latest    # job이 실행될 가상 머신의 유형 또는 환경
+
+    steps:                                                   # 순차적으로 실행되는 job의 단계 정의
+    - uses: actions/checkout@v3                              # 레퍼지토리에 저장된 코드를 CI 서버에 내려받은 후 특정 branch로 전환
+    - name: Build the site in the jekyll/builder container   # 다음 단계 이름 정의
+      # :/srv/jekyll에 github workspace 디렉토리를 docker에 volume으로 mount
+      # :/srv/jekyll/_site에 workspace의 _site 디렉토리를 docker의 volume으로 mount
+      # chmod -R 777 /srv/jekyll : /srv/jekyll를 읽고 쓰고 실행할 수 있는 권한을 부여함
+      # jekyll build --future : Jekyll site를 최신으로 build
+      run: |
+        docker run \
+        -v ${{ github.workspace }}:/srv/jekyll -v ${{ github.workspace }}/_site:/srv/jekyll/_site \
+        jekyll/builder:latest /bin/bash -c "chmod -R 777 /srv/jekyll && jekyll build --future"
